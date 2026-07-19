@@ -40,12 +40,62 @@
     white-space: nowrap;
   }
   #splash {
-    position: fixed; inset: 0; z-index: 40; background: #02030a;
-    display: flex; align-items: center; justify-content: center;
-    color: #9fdcff; font-family: "Courier New", monospace;
-    font-size: 24px; letter-spacing: 6px; text-shadow: 0 0 14px #00e5ff;
-    transition: opacity 1.2s; pointer-events: none;
+    position: fixed; inset: 0; z-index: 40; overflow: hidden; cursor: pointer;
+    background: linear-gradient(#0d1b33 0%, #0a1628 55%, #071120 100%);
+    transition: opacity 1.2s;
   }
+  #splash .seigaiha {
+    position: absolute; inset: 0 0 42% 0; opacity: .45;
+    background-image:
+      radial-gradient(circle at 50% 135%, rgba(232,227,208,.12) 20%, transparent 21.5%),
+      radial-gradient(circle at 50% 135%, rgba(232,227,208,.12) 33%, transparent 34.5%),
+      radial-gradient(circle at 50% 135%, rgba(232,227,208,.12) 46%, transparent 47.5%),
+      radial-gradient(circle at 50% 135%, rgba(232,227,208,.10) 20%, transparent 21.5%),
+      radial-gradient(circle at 50% 135%, rgba(232,227,208,.10) 33%, transparent 34.5%),
+      radial-gradient(circle at 50% 135%, rgba(232,227,208,.10) 46%, transparent 47.5%);
+    background-size: 96px 48px;
+    background-position: 0 0, 0 0, 0 0, 48px 24px, 48px 24px, 48px 24px;
+  }
+  #splash .moon {
+    position: absolute; top: 9%; right: 14%; width: 110px; height: 110px; border-radius: 50%;
+    background: radial-gradient(circle at 42% 40%, #f2efe2, #d9d4bd);
+    box-shadow: 0 0 60px 18px rgba(233,230,216,.22);
+  }
+  #splash svg.wave { position: absolute; left: 0; will-change: transform; }
+  #splash .w1 { bottom: 118px; opacity: .85; animation: drift 46s linear infinite; }
+  #splash .w2 { bottom: 54px;  animation: drift 28s linear infinite; }
+  #splash .w3 { bottom: 0;     animation: drift 18s linear infinite; }
+  @keyframes drift { to { transform: translateX(-400px); } }
+  #splash .boat {
+    position: absolute; bottom: 178px; left: 26%; width: 96px;
+    animation: bob 3.6s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-9px) rotate(2.5deg); }
+  }
+  #splash .title {
+    position: absolute; top: 10%; right: 8%; display: flex; gap: 22px;
+    writing-mode: vertical-rl; text-orientation: upright;
+    color: #e8e3d0; font-family: "Songti TC", "Hiragino Mincho ProN", "Noto Serif TC", serif;
+    text-shadow: 0 0 18px rgba(5,12,25,.9);
+  }
+  #splash .title > * { opacity: 0; animation: rise 1.6s ease forwards; }
+  #splash .t-main { font-size: clamp(46px, 9vw, 78px); letter-spacing: .3em; animation-delay: .2s; }
+  #splash .t-sub  { font-size: clamp(22px, 4.5vw, 34px); letter-spacing: .45em; opacity: .92; margin-top: 8px; animation-delay: .7s; }
+  #splash .seal {
+    background: #b3402f; color: #f5efe0; font-size: 12px; letter-spacing: .18em;
+    padding: 8px 5px; border-radius: 4px; height: max-content; margin-top: 6px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.5); animation-delay: 1.2s;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  #splash .hint {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 2;
+    color: rgba(232,227,208,.7); font-family: "Songti TC", "Hiragino Mincho ProN", serif;
+    font-size: 13px; letter-spacing: .6em; padding-left: .6em; white-space: nowrap;
+    animation: blink 2.6s ease-in-out infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: .25; } 50% { opacity: .85; } }
   #ending {
     position: fixed; inset: 0; z-index: 30; background: rgba(2,3,10,.94);
     display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -100,7 +150,49 @@
 </div>
 <div id="prompt"></div>
 <div id="banner"></div>
-<div id="splash">渡海，往沙那賽</div>
+<div id="splash">
+  <div class="seigaiha"></div>
+  <div class="moon"></div>
+  <svg class="wave w1" width="2800" height="160" viewBox="0 0 2800 160" aria-hidden="true">
+    <defs><g id="wu1">
+      <path d="M0 96 C40 78 75 70 110 80 C150 92 180 74 220 72 C260 70 290 84 320 90 C350 96 380 92 400 90 L400 160 L0 160 Z" fill="#16263f"/>
+      <path d="M0 96 C40 78 75 70 110 80 C150 92 180 74 220 72 C260 70 290 84 320 90 C350 96 380 92 400 90" fill="none" stroke="rgba(232,227,208,.28)" stroke-width="3" stroke-linecap="round"/>
+    </g></defs>
+    <use href="#wu1" x="0"/><use href="#wu1" x="400"/><use href="#wu1" x="800"/><use href="#wu1" x="1200"/><use href="#wu1" x="1600"/><use href="#wu1" x="2000"/><use href="#wu1" x="2400"/>
+  </svg>
+  <svg class="boat" viewBox="0 0 100 44" width="96" aria-hidden="true">
+    <path d="M6 24 C24 32 76 32 94 24 L84 38 C62 44 36 44 14 38 Z" fill="#060a12"/>
+    <path d="M50 3 L50 24" stroke="#060a12" stroke-width="2.5"/>
+    <path d="M52 5 L68 20 L52 20 Z" fill="#0a1220"/>
+    <circle cx="12" cy="26" r="2.4" fill="#ffb066"/>
+  </svg>
+  <svg class="wave w2" width="2800" height="160" viewBox="0 0 2800 160" aria-hidden="true">
+    <defs><g id="wu2">
+      <path d="M0 112 C30 98 58 82 92 84 C118 86 132 100 148 97 C136 84 140 64 158 56 C182 46 206 54 211 72 C215 87 204 98 190 100 C212 106 240 100 264 94 C300 85 350 100 400 112 L400 160 L0 160 Z" fill="#1b3054"/>
+      <path d="M0 112 C30 98 58 82 92 84 C118 86 132 100 148 97 C136 84 140 64 158 56 C182 46 206 54 211 72 C215 87 204 98 190 100 C212 106 240 100 264 94 C300 85 350 100 400 112" fill="none" stroke="rgba(217,211,189,.5)" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="176" cy="52" r="3" fill="rgba(217,211,189,.55)"/>
+      <circle cx="196" cy="46" r="2.4" fill="rgba(217,211,189,.5)"/>
+      <circle cx="162" cy="46" r="2" fill="rgba(217,211,189,.45)"/>
+    </g></defs>
+    <use href="#wu2" x="0"/><use href="#wu2" x="400"/><use href="#wu2" x="800"/><use href="#wu2" x="1200"/><use href="#wu2" x="1600"/><use href="#wu2" x="2000"/><use href="#wu2" x="2400"/>
+  </svg>
+  <svg class="wave w3" width="2800" height="160" viewBox="0 0 2800 160" aria-hidden="true">
+    <defs><g id="wu3">
+      <path d="M0 78 C50 52 84 40 122 52 C152 62 168 84 196 82 C182 66 188 44 212 36 C242 26 272 36 277 58 C280 74 268 86 252 88 C282 96 322 76 352 66 C372 60 388 64 400 68 L400 160 L0 160 Z" fill="#0b1424"/>
+      <path d="M0 78 C50 52 84 40 122 52 C152 62 168 84 196 82 C182 66 188 44 212 36 C242 26 272 36 277 58 C280 74 268 86 252 88 C282 96 322 76 352 66 C372 60 388 64 400 68" fill="none" stroke="rgba(239,233,214,.55)" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="232" cy="32" r="3.5" fill="rgba(239,233,214,.6)"/>
+      <circle cx="214" cy="28" r="2.6" fill="rgba(239,233,214,.55)"/>
+      <circle cx="250" cy="30" r="2.2" fill="rgba(239,233,214,.5)"/>
+    </g></defs>
+    <use href="#wu3" x="0"/><use href="#wu3" x="400"/><use href="#wu3" x="800"/><use href="#wu3" x="1200"/><use href="#wu3" x="1600"/><use href="#wu3" x="2000"/><use href="#wu3" x="2400"/>
+  </svg>
+  <div class="title">
+    <span class="t-main">渡海</span>
+    <span class="t-sub">往沙那賽</span>
+    <span class="seal">沙那賽</span>
+  </div>
+  <div class="hint">觸 碰 登 島</div>
+</div>
 <div id="ending">
   <h2>謝謝你來玩我的遊戲。</h2>
   <p>— 沙那賽館長</p>
@@ -538,10 +630,15 @@ const DEBUG = (location.protocol === 'file:' || location.hostname === 'localhost
   && new URLSearchParams(location.search).get('debug') === '1';
 if (DEBUG) document.querySelector('#hud p').textContent = 'DEBUG：7=偽造小蜜蜂 8=偽造Blocks 9=傳送暗處';
 
-/* ---------- 開場 ---------- */
+/* ---------- 開場：渡海（點擊即登島，否則 5 秒後自動） ---------- */
 const splash = document.getElementById('splash');
-setTimeout(() => { splash.style.opacity = '0'; }, 1400);
-setTimeout(() => { splash.style.display = 'none'; }, 2800);
+const hideSplash = () => {
+  splash.style.opacity = '0';
+  splash.style.pointerEvents = 'none';
+  setTimeout(() => { splash.style.display = 'none'; }, 1300);
+};
+setTimeout(hideSplash, 5200);
+splash.addEventListener('pointerdown', hideSplash, { once: true });
 
 /* ---------- 主迴圈 ---------- */
 const promptEl = document.getElementById('prompt');
