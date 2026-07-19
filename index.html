@@ -278,8 +278,8 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.AmbientLight(0x8888aa, .6));
-const moon = new THREE.DirectionalLight(0xaaccff, .5);
+scene.add(new THREE.AmbientLight(0x8888aa, CLASSIC ? .6 : .95));
+const moon = new THREE.DirectionalLight(0xaaccff, CLASSIC ? .5 : .75);
 moon.position.set(5, 12, 6);
 scene.add(moon);
 
@@ -400,6 +400,7 @@ GAMES.forEach((game, i) => {
   } else {
     loader.load('assets/arcade.glb', g => {
       const m = g.scene;
+      m.rotation.y = -Math.PI / 2;   // 模型正面朝 +X，轉到 +Z（面向玩家）
       fitToGround(m, 2.3);
       cab.add(m);
     });
