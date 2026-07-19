@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SANASAI 沙那賽</title>
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; background: #050510; height: 100%; }
+  #hud {
+    position: fixed; top: 12px; left: 14px; z-index: 10;
+    color: #7ff7ff; font-family: "Courier New", monospace;
+    text-shadow: 0 0 8px #00e5ff; pointer-events: none; user-select: none;
+  }
+  #hud h1 { margin: 0 0 4px 0; font-size: 20px; letter-spacing: 4px; }
+  #hud p { margin: 0; font-size: 12px; opacity: .8; }
+  #keys {
+    position: fixed; top: 12px; right: 14px; z-index: 10;
+    font-family: "Courier New", monospace; font-size: 15px;
+    pointer-events: none; user-select: none; text-align: right;
+  }
+  #keys span { margin-left: 10px; opacity: .25; }
+  #keys span.owned { opacity: 1; }
+  #keys .copper.owned { color: #e09a5a; text-shadow: 0 0 8px #b87333; }
+  #keys .jade.owned   { color: #4be8a8; text-shadow: 0 0 8px #00a86b; }
+  #keys .crystal.owned{ color: #c9f6ff; text-shadow: 0 0 8px #a5f2f3; }
+  #keys span:not(.owned) { color: #8899aa; }
+  #prompt {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    z-index: 10; color: #ffe97f; font-family: "Courier New", monospace;
+    font-size: 15px; text-shadow: 0 0 10px #ffb300; text-align: center;
+    background: rgba(10,10,30,.65); border: 1px solid #ffe97f66;
+    padding: 8px 18px; border-radius: 8px; display: none;
+    pointer-events: none; user-select: none; line-height: 1.6;
+  }
+  #banner {
+    position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 15; color: #fff; font-family: "Courier New", monospace;
+    font-size: 30px; letter-spacing: 3px; text-shadow: 0 0 18px #ffe97f;
+    opacity: 0; transition: opacity .5s; pointer-events: none; user-select: none;
+    white-space: nowrap;
+  }
+  #splash {
+    position: fixed; inset: 0; z-index: 40; background: #02030a;
+    display: flex; align-items: center; justify-content: center;
+    color: #9fdcff; font-family: "Courier New", monospace;
+    font-size: 24px; letter-spacing: 6px; text-shadow: 0 0 14px #00e5ff;
+    transition: opacity 1.2s; pointer-events: none;
+  }
+  #ending {
+    position: fixed; inset: 0; z-index: 30; background: rgba(2,3,10,.94);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    color: #ffe97f; font-family: "Courier New", monospace; text-align: center;
+  }
+  #ending h2 { font-size: 30px; letter-spacing: 4px; text-shadow: 0 0 16px #ffb300; margin: 0 0 14px; }
+  #ending p { color: #9fdcff; font-size: 15px; margin: 6px 0; }
+  #ending .coin { font-size: 46px; margin: 18px 0; filter: drop-shadow(0 0 12px #ffd23f); }
+  #ending button {
+    margin-top: 22px; background: none; border: 1px solid #ffe97f; color: #ffe97f;
+    font-family: inherit; font-size: 15px; padding: 8px 22px; border-radius: 6px; cursor: pointer;
+  }
+  #overlay {
+    position: fixed; inset: 0; z-index: 20; background: #000;
+    display: none; flex-direction: column;
+  }
+  #overlay-bar {
+    height: 44px; display: flex; align-items: center; gap: 12px;
+    background: #0a0a20; color: #7ff7ff; font-family: "Courier New", monospace;
+    padding: 0 12px; border-bottom: 1px solid #00e5ff44; flex: 0 0 auto;
+  }
+  #overlay-bar button {
+    background: none; border: 1px solid #7ff7ff; color: #7ff7ff;
+    font-family: inherit; font-size: 14px; padding: 6px 14px;
+    border-radius: 6px; cursor: pointer;
+  }
+  #overlay-bar button:active { background: #7ff7ff33; }
+  #overlay iframe { flex: 1 1 auto; border: 0; width: 100%; }
+  #joystick {
+    position: fixed; left: 24px; bottom: 24px; z-index: 10;
+    width: 110px; height: 110px; border-radius: 50%;
+    border: 2px solid #00e5ff55; background: rgba(0,229,255,.06);
+    touch-action: none; display: none;
+  }
+  #stick {
+    position: absolute; left: 35px; top: 35px; width: 40px; height: 40px;
+    border-radius: 50%; background: rgba(0,229,255,.35);
+    box-shadow: 0 0 12px #00e5ff88;
+  }
+  @media (pointer: coarse) { #joystick { display: block; } }
+</style>
+</head>
+<body>
+<div id="hud">
+  <h1>SANASAI</h1>
+  <p>方向鍵 / WASD 走動．走近機台按 Enter（或點機台）進入遊戲</p>
+</div>
+<div id="keys">
+  <span class="copper" id="key-copper">⚿ 銅</span>
+  <span class="jade" id="key-jade">⚿ 玉</span>
+  <span class="crystal" id="key-crystal">⚿ 晶</span>
+</div>
+<div id="prompt"></div>
+<div id="banner"></div>
+<div id="splash">渡海，往沙那賽</div>
+<div id="ending">
+  <h2>謝謝你來玩我的遊戲。</h2>
+  <p>— 沙那賽館長</p>
+  <div class="coin">🪙</div>
+  <p>獲得 25¢ 復活幣：從今以後，它會一直留在島的入口。</p>
+  <button id="btn-ending">回到大廳</button>
+</div>
+<div id="overlay">
+  <div id="overlay-bar">
+    <button id="btn-back">⟵ 返回大廳</button>
+    <span id="overlay-title"></span>
+  </div>
+  <iframe id="game-frame" src="about:blank" allow="fullscreen"></iframe>
+</div>
+<div id="joystick"><div id="stick"></div></div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+/* ---------- 遊戲清單：新遊戲上架只要加一行 ---------- */
+const GAMES = [
+  { name: '小蜜蜂',    en: 'BEE',        url: 'https://garychiang23-creator.github.io/bee/mobile.html', color: 0xffd23f },
+  { name: 'Blocks Pro', en: 'BLOCKS PRO', url: 'https://garychiang23-creator.github.io/blocks/',        color: 0x4fc3f7 },
+  { name: '托福特訓',  en: 'TOEFL GYM',  url: 'https://garychiang23-creator.github.io/toefl/',          color: 0x81c784 },
+];
+
+/* ---------- 三把鑰匙（同網域 localStorage 讀真實紀錄） ---------- */
+const BEE_TARGET = 20000;       // 銅：小蜜蜂最高分
+const MARATHON_TARGET = 15000;  // 玉：Blocks MARATHON 分數（或完成 SPRINT 40）
+const beeHi = () => parseInt(localStorage.getItem('bee_hi') || '0', 10);
+const marathonBest = () => parseFloat(localStorage.getItem('tetris2_best_marathon') || '0');
+const sprintDone = () => isFinite(parseFloat(localStorage.getItem('tetris2_best_sprint') || 'Infinity'));
+
+const KEYS = [
+  { id: 'copper',  name: '銅鑰匙', color: 0xb87333, glow: 0xe09a5a,
+    met: () => beeHi() >= BEE_TARGET,
+    quest: () => `銅鑰匙任務：小蜜蜂最高分 ${BEE_TARGET.toLocaleString()}（目前 ${beeHi().toLocaleString()}）`,
+    pos: [-3.8, -5.2] },
+  { id: 'jade',    name: '玉鑰匙', color: 0x00a86b, glow: 0x4be8a8,
+    met: () => marathonBest() >= MARATHON_TARGET || sprintDone(),
+    quest: () => `玉鑰匙任務：MARATHON ${MARATHON_TARGET.toLocaleString()} 分或完成 SPRINT 40（目前 ${Math.floor(marathonBest()).toLocaleString()}）`,
+    pos: [0, -6.5] },
+  { id: 'crystal', name: '水晶鑰匙', color: 0xa5f2f3, glow: 0xc9f6ff,
+    met: () => true,   // 藏在暗處，走到就算
+    quest: () => '',
+    pos: [0, 17.5] },
+];
+let keyState = { copper: false, jade: false, crystal: false, coin: false };
+try { Object.assign(keyState, JSON.parse(localStorage.getItem('sanasai_keys') || '{}')); } catch (e) {}
+const saveKeys = () => { try { localStorage.setItem('sanasai_keys', JSON.stringify(keyState)); } catch (e) {} };
+const allKeys = () => keyState.copper && keyState.jade && keyState.crystal;
+
+/* ---------- 場景 ---------- */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050510);
+scene.fog = new THREE.Fog(0x050510, 18, 55);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 200);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0x8888aa, .6));
+const moon = new THREE.DirectionalLight(0xaaccff, .5);
+moon.position.set(5, 12, 6);
+scene.add(moon);
+
+const grid = new THREE.GridHelper(160, 80, 0x00e5ff, 0x123a55);
+scene.add(grid);
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(160, 160),
+  new THREE.MeshBasicMaterial({ color: 0x070718 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -0.02;
+scene.add(floor);
+
+{
+  const n = 900, pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const r = 70 + Math.random() * 60;
+    const a = Math.random() * Math.PI * 2, b = Math.acos(Math.random() * 2 - 1);
+    pos[i*3]   = r * Math.sin(b) * Math.cos(a);
+    pos[i*3+1] = Math.abs(r * Math.cos(b)) + 2;
+    pos[i*3+2] = r * Math.sin(b) * Math.sin(a);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xbfe8ff, size: .35 })));
+}
+
+/* ---------- 玩家分身 ---------- */
+const avatar = new THREE.Group();
+const body = new THREE.Mesh(
+  new THREE.CapsuleGeometry(.35, .7, 6, 14),
+  new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x0090aa, roughness: .3 })
+);
+body.position.y = .9;
+avatar.add(body);
+const halo = new THREE.Mesh(
+  new THREE.TorusGeometry(.55, .04, 10, 40),
+  new THREE.MeshBasicMaterial({ color: 0x00e5ff })
+);
+halo.rotation.x = Math.PI / 2;
+halo.position.y = .08;
+avatar.add(halo);
+scene.add(avatar);
+
+/* ---------- 街機機台 ---------- */
+function labelTexture(text, sub, colorHex) {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  const x = c.getContext('2d');
+  x.fillStyle = '#050a18'; x.fillRect(0, 0, 256, 256);
+  const col = '#' + colorHex.toString(16).padStart(6, '0');
+  x.strokeStyle = col; x.lineWidth = 8; x.strokeRect(8, 8, 240, 240);
+  x.fillStyle = col; x.textAlign = 'center';
+  x.font = 'bold 52px "PingFang TC", sans-serif';
+  x.fillText(text, 128, 118);
+  x.font = 'bold 26px "Courier New", monospace';
+  x.fillText(sub, 128, 170);
+  x.font = '20px sans-serif';
+  x.fillText('▶ PLAY', 128, 215);
+  return new THREE.CanvasTexture(c);
+}
+
+const cabinets = [];
+GAMES.forEach((game, i) => {
+  const angle = (i - (GAMES.length - 1) / 2) * (Math.PI / 5);
+  const R = 9;
+  const gx = Math.sin(angle) * R, gz = -Math.cos(angle) * R;
+
+  const cab = new THREE.Group();
+  const shell = new THREE.Mesh(
+    new THREE.BoxGeometry(1.6, 2.3, 1.0),
+    new THREE.MeshStandardMaterial({ color: 0x101028, roughness: .6 })
+  );
+  shell.position.y = 1.15;
+  cab.add(shell);
+
+  const screen = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.3, 1.3),
+    new THREE.MeshBasicMaterial({ map: labelTexture(game.name, game.en, game.color) })
+  );
+  screen.position.set(0, 1.35, 0.51);
+  cab.add(screen);
+
+  const marquee = new THREE.Mesh(
+    new THREE.BoxGeometry(1.7, .3, 1.05),
+    new THREE.MeshBasicMaterial({ color: game.color })
+  );
+  marquee.position.y = 2.45;
+  cab.add(marquee);
+
+  const glow = new THREE.PointLight(game.color, 6, 7);
+  glow.position.set(0, 1.6, 1.2);
+  cab.add(glow);
+
+  cab.position.set(gx, 0, gz);
+  cab.lookAt(0, 0, 0);
+  scene.add(cab);
+  cabinets.push({ game, group: cab, screen, shell });
+});
+
+/* ---------- 鑰匙基座與鑰匙 ---------- */
+function makeKeyMesh(k) {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({ color: k.color, emissive: k.color, emissiveIntensity: .55, roughness: .3, metalness: .6 });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.22, .06, 10, 24), mat);
+  ring.position.y = .3;
+  g.add(ring);
+  const shaft = new THREE.Mesh(new THREE.BoxGeometry(.1, .55, .1), mat);
+  shaft.position.y = -.15;
+  g.add(shaft);
+  const t1 = new THREE.Mesh(new THREE.BoxGeometry(.18, .09, .09), mat);
+  t1.position.set(.12, -.38, 0);
+  g.add(t1);
+  const t2 = new THREE.Mesh(new THREE.BoxGeometry(.13, .09, .09), mat);
+  t2.position.set(.1, -.24, 0);
+  g.add(t2);
+  return g;
+}
+
+const pedestals = {};   // id -> { group, key, k }
+function spawnPedestal(k) {
+  if (pedestals[k.id]) return;
+  const group = new THREE.Group();
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(.5, .65, .9, 8),
+    new THREE.MeshStandardMaterial({ color: 0x14142e, roughness: .5 })
+  );
+  base.position.y = .45;
+  group.add(base);
+  const key = makeKeyMesh(k);
+  key.position.y = 1.5;
+  group.add(key);
+  const light = new THREE.PointLight(k.glow, 7, 6);
+  light.position.y = 1.6;
+  group.add(light);
+  group.position.set(k.pos[0], 0, k.pos[1]);
+  scene.add(group);
+  pedestals[k.id] = { group, key, k };
+}
+function removePedestal(id) {
+  if (!pedestals[id]) return;
+  scene.remove(pedestals[id].group);
+  delete pedestals[id];
+}
+
+/* 石碑（水晶鑰匙的提示） */
+const stele = new THREE.Mesh(
+  new THREE.BoxGeometry(.7, 1.5, .25),
+  new THREE.MeshStandardMaterial({ color: 0x1a2a3a, emissive: 0x0a2a3a, emissiveIntensity: .4, roughness: .7 })
+);
+stele.position.set(2.6, .75, 1.8);
+stele.rotation.y = -.5;
+scene.add(stele);
+
+/* 沙那賽之門（集齊三鑰匙才出現） */
+let gate = null;
+function spawnGate() {
+  if (gate) return;
+  gate = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({ color: 0xffe97f, emissive: 0xffb300, emissiveIntensity: .6, roughness: .4 });
+  const l = new THREE.Mesh(new THREE.BoxGeometry(.4, 4, .4), mat); l.position.set(-1.5, 2, 0); gate.add(l);
+  const r = new THREE.Mesh(new THREE.BoxGeometry(.4, 4, .4), mat); r.position.set(1.5, 2, 0); gate.add(r);
+  const top = new THREE.Mesh(new THREE.BoxGeometry(3.8, .4, .5), mat); top.position.set(0, 4.1, 0); gate.add(top);
+  const light = new THREE.PointLight(0xffe97f, 10, 12); light.position.set(0, 2.5, 1); gate.add(light);
+  gate.position.set(0, 0, -13);
+  scene.add(gate);
+  banner('三鑰齊聚——沙那賽之門開啟');
+}
+
+/* 25¢ 復活幣（結局後常駐入口） */
+let coin = null;
+function spawnCoin() {
+  if (coin) return;
+  coin = new THREE.Mesh(
+    new THREE.CylinderGeometry(.35, .35, .07, 24),
+    new THREE.MeshStandardMaterial({ color: 0xffd23f, emissive: 0xaa7700, emissiveIntensity: .5, metalness: .8, roughness: .25 })
+  );
+  coin.rotation.x = Math.PI / 2;
+  coin.position.set(-2.4, 1.1, 2.2);
+  scene.add(coin);
+}
+if (keyState.coin) spawnCoin();
+
+/* ---------- 鑰匙狀態機 ---------- */
+function checkKeys() {
+  for (const k of KEYS) {
+    if (keyState[k.id]) { removePedestal(k.id); continue; }
+    if (k.met()) spawnPedestal(k);
+  }
+  for (const k of KEYS) {
+    const el = document.getElementById('key-' + k.id);
+    el.classList.toggle('owned', !!keyState[k.id]);
+  }
+  if (allKeys() && !keyState.coin) spawnGate();
+}
+setInterval(checkKeys, 4000);
+
+const bannerEl = document.getElementById('banner');
+let bannerTimer = null;
+function banner(text) {
+  bannerEl.textContent = text;
+  bannerEl.style.opacity = '1';
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => { bannerEl.style.opacity = '0'; }, 2600);
+}
+
+function collectKey(k) {
+  keyState[k.id] = true;
+  saveKeys();
+  removePedestal(k.id);
+  banner(`⚿ ${k.name}到手！`);
+  checkKeys();
+}
+
+/* ---------- 輸入 ---------- */
+const keys = {};
+addEventListener('keydown', e => {
+  keys[e.key.toLowerCase()] = true;
+  if (e.key === 'Enter' && nearCabinet && !uiLock()) enterGame(nearCabinet.game);
+  if (e.key === 'Escape') closeGame();
+  if (DEBUG) {
+    if (e.key === '7') { localStorage.setItem('bee_hi', String(BEE_TARGET + 500)); banner('DEBUG：偽造小蜜蜂紀錄'); checkKeys(); }
+    if (e.key === '8') { localStorage.setItem('tetris2_best_marathon', String(MARATHON_TARGET + 500)); banner('DEBUG：偽造 Blocks 紀錄'); checkKeys(); }
+    if (e.key === '9') { avatar.position.set(0, 0, 14); banner('DEBUG：傳送到暗處附近'); }
+  }
+});
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+/* 觸控搖桿 */
+const joy = { x: 0, y: 0 };
+{
+  const pad = document.getElementById('joystick');
+  const stick = document.getElementById('stick');
+  let active = null;
+  pad.addEventListener('pointerdown', e => { active = e.pointerId; pad.setPointerCapture(e.pointerId); move(e); });
+  pad.addEventListener('pointermove', e => { if (e.pointerId === active) move(e); });
+  const end = e => {
+    if (e.pointerId !== active) return;
+    active = null; joy.x = 0; joy.y = 0;
+    stick.style.left = '35px'; stick.style.top = '35px';
+  };
+  pad.addEventListener('pointerup', end);
+  pad.addEventListener('pointercancel', end);
+  function move(e) {
+    const r = pad.getBoundingClientRect();
+    let dx = e.clientX - (r.left + 55), dy = e.clientY - (r.top + 55);
+    const len = Math.hypot(dx, dy), max = 38;
+    if (len > max) { dx = dx / len * max; dy = dy / len * max; }
+    joy.x = dx / max; joy.y = dy / max;
+    stick.style.left = 35 + dx + 'px';
+    stick.style.top = 35 + dy + 'px';
+  }
+}
+
+/* 點擊機台 */
+const ray = new THREE.Raycaster(), pointer = new THREE.Vector2();
+renderer.domElement.addEventListener('pointerup', e => {
+  if (uiLock()) return;
+  pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(pointer, camera);
+  for (const c of cabinets) {
+    if (ray.intersectObjects([c.screen, c.shell]).length) { enterGame(c.game); return; }
+  }
+});
+
+/* ---------- 進出遊戲／結局 ---------- */
+const overlay = document.getElementById('overlay');
+const frame = document.getElementById('game-frame');
+const ending = document.getElementById('ending');
+let inGame = false, inEnding = false;
+const uiLock = () => inGame || inEnding;
+
+function enterGame(game) {
+  if (uiLock()) return;
+  inGame = true;
+  document.getElementById('overlay-title').textContent = `${game.name}  ${game.en}`;
+  frame.src = game.url;
+  overlay.style.display = 'flex';
+}
+function closeGame() {
+  if (!inGame) return;
+  inGame = false;
+  overlay.style.display = 'none';
+  frame.src = 'about:blank';
+  checkKeys();   // 回大廳立刻對帳：有沒有新鑰匙現世
+}
+document.getElementById('btn-back').addEventListener('click', closeGame);
+
+function openEnding() {
+  inEnding = true;
+  keyState.coin = true;
+  saveKeys();
+  spawnCoin();
+  ending.style.display = 'flex';
+}
+document.getElementById('btn-ending').addEventListener('click', () => {
+  inEnding = false;
+  ending.style.display = 'none';
+});
+
+/* ---------- DEBUG（僅本機測試；線上一律關閉） ---------- */
+const DEBUG = (location.protocol === 'file:' || location.hostname === 'localhost')
+  && new URLSearchParams(location.search).get('debug') === '1';
+if (DEBUG) document.querySelector('#hud p').textContent = 'DEBUG：7=偽造小蜜蜂 8=偽造Blocks 9=傳送暗處';
+
+/* ---------- 開場 ---------- */
+const splash = document.getElementById('splash');
+setTimeout(() => { splash.style.opacity = '0'; }, 1400);
+setTimeout(() => { splash.style.display = 'none'; }, 2800);
+
+/* ---------- 主迴圈 ---------- */
+const promptEl = document.getElementById('prompt');
+let nearCabinet = null;
+const vel = new THREE.Vector3();
+const clock = new THREE.Clock();
+
+function tick() {
+  requestAnimationFrame(tick);
+  const dt = Math.min(clock.getDelta(), .05);
+  const t = clock.elapsedTime;
+
+  if (!uiLock()) {
+    let ix = (keys['d'] || keys['arrowright'] ? 1 : 0) - (keys['a'] || keys['arrowleft'] ? 1 : 0) + joy.x;
+    let iz = (keys['s'] || keys['arrowdown'] ? 1 : 0) - (keys['w'] || keys['arrowup'] ? 1 : 0) + joy.y;
+    const len = Math.hypot(ix, iz);
+    if (len > 1) { ix /= len; iz /= len; }
+    vel.set(ix, 0, iz).multiplyScalar(6);
+    avatar.position.addScaledVector(vel, dt);
+    avatar.position.x = THREE.MathUtils.clamp(avatar.position.x, -20, 20);
+    avatar.position.z = THREE.MathUtils.clamp(avatar.position.z, -20, 20);
+    if (len > .1) {
+      const target = Math.atan2(ix, iz);
+      let d = target - avatar.rotation.y;
+      while (d > Math.PI) d -= Math.PI * 2;
+      while (d < -Math.PI) d += Math.PI * 2;
+      avatar.rotation.y += d * Math.min(1, dt * 10);
+    }
+  }
+
+  halo.rotation.z += dt * 2;
+  body.position.y = .9 + Math.sin(t * 2) * .04;
+  for (const id in pedestals) {
+    const p = pedestals[id];
+    p.key.rotation.y += dt * 1.5;
+    p.key.position.y = 1.5 + Math.sin(t * 2.2) * .12;
+  }
+  if (coin) coin.rotation.z += dt * 2;
+
+  /* 接近偵測：機台 */
+  nearCabinet = null;
+  let best = 3.2;
+  for (const c of cabinets) {
+    const d = avatar.position.distanceTo(c.group.position);
+    if (d < best) { best = d; nearCabinet = c; }
+  }
+
+  /* 接近偵測：鑰匙拾取 */
+  for (const id in pedestals) {
+    const p = pedestals[id];
+    if (avatar.position.distanceTo(p.group.position) < 1.4) collectKey(p.k);
+  }
+
+  /* 接近偵測：門 */
+  if (gate && !keyState.coin && !inEnding && avatar.position.distanceTo(gate.position) < 2.2) openEnding();
+
+  /* 提示文字 */
+  const lines = [];
+  if (nearCabinet && !uiLock()) {
+    lines.push(`按 Enter 進入《${nearCabinet.game.name}》`);
+    const k = KEYS.find(k =>
+      (k.id === 'copper' && nearCabinet.game.en === 'BEE') ||
+      (k.id === 'jade' && nearCabinet.game.en === 'BLOCKS PRO'));
+    if (k && !keyState[k.id]) lines.push(k.met() ? `⚿ ${k.name}已現世——就在機台旁的基座上` : k.quest());
+  }
+  if (avatar.position.distanceTo(stele.position) < 2.2) {
+    lines.push('石碑：「霓虹照不到的暗處，沉著第三把鑰匙。」');
+  }
+  if (gate && !keyState.coin && allKeys()) {
+    lines.push('沙那賽之門在霓虹深處發光……');
+  }
+  if (lines.length) {
+    promptEl.innerHTML = lines.join('<br>');
+    promptEl.style.display = 'block';
+  } else {
+    promptEl.style.display = 'none';
+  }
+
+  /* 攝影機跟隨 */
+  const camTarget = new THREE.Vector3(avatar.position.x, 4.5, avatar.position.z + 8.5);
+  camera.position.lerp(camTarget, Math.min(1, dt * 4));
+  camera.lookAt(avatar.position.x, 1.2, avatar.position.z);
+
+  renderer.render(scene, camera);
+}
+checkKeys();
+tick();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
