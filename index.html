@@ -75,27 +75,37 @@
     50% { transform: translateY(-9px) rotate(2.5deg); }
   }
   #splash .title {
-    position: absolute; top: 10%; right: 8%; display: flex; gap: 22px;
-    writing-mode: vertical-rl; text-orientation: upright;
-    color: #e8e3d0; font-family: "Songti TC", "Hiragino Mincho ProN", "Noto Serif TC", serif;
-    text-shadow: 0 0 18px rgba(5,12,25,.9);
+    position: absolute; top: 24%; left: 50%; transform: translateX(-50%);
+    text-align: center; color: #e8e3d0;
+    font-family: "Futura", "Avenir Next", "Helvetica Neue", sans-serif;
+    text-shadow: 0 0 24px rgba(5, 12, 25, .8); white-space: nowrap;
   }
   #splash .title > * { opacity: 0; animation: rise 1.6s ease forwards; }
-  #splash .t-main { font-size: clamp(46px, 9vw, 78px); letter-spacing: .3em; animation-delay: .2s; }
-  #splash .t-sub  { font-size: clamp(22px, 4.5vw, 34px); letter-spacing: .45em; opacity: .92; margin-top: 8px; animation-delay: .7s; }
-  #splash .seal {
-    background: #b3402f; color: #f5efe0; font-size: 12px; letter-spacing: .18em;
-    padding: 8px 5px; border-radius: 4px; height: max-content; margin-top: 6px;
-    box-shadow: 0 2px 10px rgba(0,0,0,.5); animation-delay: 1.2s;
+  #splash .t-main {
+    font-size: clamp(30px, 7vw, 68px); font-weight: 500;
+    letter-spacing: .5em; padding-left: .5em; animation-delay: .2s;
+  }
+  #splash .t-rule {
+    width: 64px; height: 1px; background: rgba(232,227,208,.55);
+    margin: 18px auto 14px; animation-delay: .7s;
+  }
+  #splash .t-sub {
+    font-size: clamp(11px, 1.8vw, 16px); font-weight: 400;
+    letter-spacing: .62em; padding-left: .62em; opacity: .8; animation-delay: .9s;
   }
   @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
   #splash .hint {
     position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 2;
-    color: rgba(232,227,208,.7); font-family: "Songti TC", "Hiragino Mincho ProN", serif;
-    font-size: 13px; letter-spacing: .6em; padding-left: .6em; white-space: nowrap;
+    color: rgba(232,227,208,.7);
+    font-family: "Futura", "Avenir Next", "Helvetica Neue", sans-serif;
+    font-size: 12px; letter-spacing: .5em; padding-left: .5em; white-space: nowrap;
     animation: blink 2.6s ease-in-out infinite;
   }
   @keyframes blink { 0%, 100% { opacity: .25; } 50% { opacity: .85; } }
+  @media (max-width: 600px) {
+    #splash .moon { width: 84px; height: 84px; top: 7%; left: 10%; }
+    #splash .title { top: 28%; }
+  }
   #ending {
     position: fixed; inset: 0; z-index: 30; background: rgba(2,3,10,.94);
     display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -187,11 +197,11 @@
     <use href="#wu3" x="0"/><use href="#wu3" x="400"/><use href="#wu3" x="800"/><use href="#wu3" x="1200"/><use href="#wu3" x="1600"/><use href="#wu3" x="2000"/><use href="#wu3" x="2400"/>
   </svg>
   <div class="title">
-    <span class="t-main">渡海</span>
-    <span class="t-sub">往沙那賽</span>
-    <span class="seal">沙那賽</span>
+    <div class="t-main">SANASAI</div>
+    <div class="t-rule"></div>
+    <div class="t-sub">CROSS THE SEA</div>
   </div>
-  <div class="hint">觸 碰 登 島</div>
+  <div class="hint">TAP TO LAND</div>
 </div>
 <div id="ending">
   <h2>謝謝你來玩我的遊戲。</h2>
